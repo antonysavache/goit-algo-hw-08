@@ -1,114 +1,95 @@
-# Базова структура для двійкового дерева пошуку
-class Node:
-    def __init__(self, value):
-        self.value = value
-        self.left = None
-        self.right = None
+import heapq
 
-class BinarySearchTree:
-    def __init__(self):
-        self.root = None
+def min_connection_cost(cables):
+    """
+    Знаходить мінімальні витрати на з'єднання кабелів
 
-    def insert(self, value):
-        if not self.root:
-            self.root = Node(value)
-        else:
-            self._insert_recursive(self.root, value)
+    Args:
+        cables (list): Список довжин кабелів
 
-    def _insert_recursive(self, node, value):
-        if value < node.value:
-            if node.left is None:
-                node.left = Node(value)
-            else:
-                self._insert_recursive(node.left, value)
-        else:
-            if node.right is None:
-                node.right = Node(value)
-            else:
-                self._insert_recursive(node.right, value)
+    Returns:
+        int: Мінімальні загальні витрати на з'єднання
+    """
+    # Створюємо мінімальну купу з довжин кабелів
+    heapq.heapify(cables)
+    total_cost = 0
 
-    # Завдання 1: Знаходження максимального значення
-    def find_max(self):
-        if not self.root:
-            return None
+    # Поки в нас є більше одного кабеля
+    while len(cables) > 1:
+        # Беремо два найкоротші кабелі
+        first = heapq.heappop(cables)
+        second = heapq.heappop(cables)
 
-        current = self.root
-        while current.right:
-            current = current.right
-        return current.value
+        # Рахуємо вартість їх з'єднання
+        connection_cost = first + second
+        # Додаємо до загальної вартості
+        total_cost += connection_cost
 
-    # Завдання 2: Знаходження мінімального значення
-    def find_min(self):
-        if not self.root:
-            return None
+        # Додаємо з'єднаний кабель назад до купи
+        heapq.heappush(cables, connection_cost)
 
-        current = self.root
-        while current.left:
-            current = current.left
-        return current.value
+    return total_cost
 
-    # Завдання 3: Знаходження суми всіх значень
-    def sum_all(self):
-        return self._sum_recursive(self.root)
+def merge_k_lists(lists):
+    """
+    Об'єднує k відсортованих списків в один відсортований список
+    використовуючи мінімальну купу
 
-    def _sum_recursive(self, node):
-        if not node:
-            return 0
-        return node.value + self._sum_recursive(node.left) + self._sum_recursive(node.right)
+    Args:
+        lists (List[List[int]]): Список відсортованих списків
 
-# Завдання 4: Система коментарів
-class Comment:
-    def __init__(self, text, author):
-        self.text = text
-        self.author = author
-        self.replies = []
-        self.is_deleted = False
+    Returns:
+        List[int]: Об'єднаний відсортований список
+    """
+    # Створюємо мінімальну купу для зберігання елементів
+    heap = []
+    result = []
 
-    def add_reply(self, reply):
-        self.replies.append(reply)
+    # Створюємо початкові елементи купи
+    # Додаємо перший елемент кожного списку разом з індексом списку та позицією
+    for i, lst in enumerate(lists):
+        if lst:  # перевіряємо, що список не порожній
+            heapq.heappush(heap, (lst[0], i, 0))
 
-    def remove_reply(self):
-        self.text = "Цей коментар було видалено."
-        self.is_deleted = True
+    # Поки купа не порожня
+    while heap:
+        val, list_ind, elem_ind = heapq.heappop(heap)
+        result.append(val)
 
-    def display(self, level=0):
-        indent = "    " * level
-        if self.is_deleted:
-            print(f"{indent}{self.text}")
-        else:
-            print(f"{indent}{self.author}: {self.text}")
+        # Якщо в поточному списку ще є елементи
+        if elem_ind + 1 < len(lists[list_ind]):
+            next_elem = lists[list_ind][elem_ind + 1]
+            heapq.heappush(heap, (next_elem, list_ind, elem_ind + 1))
 
-        for reply in self.replies:
-            reply.display(level + 1)
+    return result
 
-# Приклад використання BST
-def test_bst():
-    bst = BinarySearchTree()
-    values = [5, 3, 7, 1, 4, 6, 8]
-    for value in values:
-        bst.insert(value)
+# Тестування функцій
+def test_cables():
+    print("Тест 1: З'єднання кабелів")
+    cables = [4, 3, 2, 6]
+    cost = min_connection_cost(cables.copy())
+    print(f"Кабелі довжиною {cables}")
+    print(f"Мінімальні витрати на з'єднання: {cost}")
 
-    print("Максимальне значення:", bst.find_max())  # 8
-    print("Мінімальне значення:", bst.find_min())   # 1
-    print("Сума всіх значень:", bst.sum_all())      # 34
+    print("\nТест 2: З'єднання кабелів")
+    cables = [1, 2, 3, 4, 5]
+    cost = min_connection_cost(cables.copy())
+    print(f"Кабелі довжиною {cables}")
+    print(f"Мінімальні витрати на з'єднання: {cost}")
 
-# Приклад використання системи коментарів
-def test_comments():
-    root_comment = Comment("Яка чудова книга!", "Бодя")
-    reply1 = Comment("Книга повне розчарування :(", "Андрій")
-    reply2 = Comment("Що в ній чудового?", "Марина")
+def test_merge():
+    print("\nТест 3: Об'єднання відсортованих списків")
+    lists = [[1, 4, 5], [1, 3, 4], [2, 6]]
+    merged = merge_k_lists(lists)
+    print(f"Вхідні списки: {lists}")
+    print(f"Відсортований список: {merged}")
 
-    root_comment.add_reply(reply1)
-    root_comment.add_reply(reply2)
-
-    reply1_1 = Comment("Не книжка, а перевели купу паперу ні нащо...", "Сергій")
-    reply1.add_reply(reply1_1)
-
-    reply1.remove_reply()
-
-    print("\nСтруктура коментарів:")
-    root_comment.display()
+    print("\nТест 4: Об'єднання відсортованих списків")
+    lists = [[1], [2], [3], [4, 5, 6]]
+    merged = merge_k_lists(lists)
+    print(f"Вхідні списки: {lists}")
+    print(f"Відсортований список: {merged}")
 
 if __name__ == "__main__":
-    test_bst()
-    test_comments()
+    test_cables()
+    test_merge()
